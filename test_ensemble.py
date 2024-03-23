@@ -49,6 +49,13 @@ def mean_confidence_interval(data, confidence=0.95):
     h = se * sp.stats.t._ppf((1+confidence)/2., n-1)
     return m,h
 
+# logits shape: qry_size, way_size (5), 1
+def normalize(logits):
+    min_l = torch.min(logits, 1)
+    max_l = torch.max(logits, 1)
+    normed = logits - min_l / (max_l - min_l)
+    return normed
+    
 class CNNEncoder(nn.Module):
     """docstring for ClassName"""
     def __init__(self):
@@ -132,7 +139,6 @@ def main():
     feature_encoder.load_state_dict(torch.load("./models/" + params['name'] + "_feature.pkl"))
     relation_network.load_state_dict(torch.load("./models/" + params['name'] +"_relation.pkl"))
 
-
     feature_encoder.cuda(GPU)
     relation_network.cuda(GPU)
 
@@ -171,10 +177,13 @@ def main():
 
             relations = relation_network(relation_pairs).view(-1,CLASS_NUM,1)
             sim_forest_rels = rf.get_batch_rels(support_names, qry_names).\
-                view(-1,CLASS_NUM*SAMPLE_NUM_PER_CLASS,1).cuda()
-            
-            concat_rel = torch.concat([sim_forest_rels, relations], dim = 2)
-            final_relations = torch.mean(concat_rel, dim = 2).view(-1,CLASS_NUM).float().cuda()
+                view(-1,CLASS_NUM,1).cuda()
+            sim_forest_rels = normalize(sim_forest_rels)
+            relations = normalize(relations)
+
+            relations = 0.4 * sim_forest_rels + 0.5 * relations # uncomment to view results without quickboost
+
+            final_relations = relations.view(-1,CLASS_NUM).float().cuda()
 
             _,predict_labels = torch.max(final_relations.data,1)
 

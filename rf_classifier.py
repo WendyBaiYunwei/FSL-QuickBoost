@@ -29,7 +29,6 @@ class RF():
         print('start RF training')
         start = time.time()
         self.classifier = RandomForestRegressor(n_estimators = 200, random_state = config.seed, max_features = 4)
-        # self.classifier = ExtraTreesRegressor(n_estimators = 200, random_state = 0)
         self.classifier.fit(train_x, train_y)
         end = time.time()
         print('done RF training. time taken is', end - start)
@@ -39,29 +38,29 @@ class RF():
     def get_batch_rels(self, support_names, qry_names, shot_size = 1):
         relations = []
         spt_embs = [] # support embeddings
-        classpt_embs = []
-        for i, support_name in enumerate(support_names):
-            if i % shot_size == 0 and i > 0:
-                avg_spt_emb = np.mean(spt_embs, axis = 0)
-                classpt_embs.append(avg_spt_emb)
-                spt_embs.clear()
-            tokens = support_name.split('/')
-            support_name = tokens[-1]
-            spt_embedding = self.embeddings_test[self.name2idx_test[support_name]]
-            spt_embs.append(spt_embedding)
-        avg_spt_emb = np.mean(spt_embs, axis = 0)
-        classpt_embs.append(avg_spt_emb)
-        spt_embs.clear()
 
-        for qry_name in qry_names:
-            tokens = qry_name.split('/')
-            qry_name = tokens[-1]
-            qry_emb = self.embeddings_test[self.name2idx_test[qry_name]]
+        classpt_embs = []
+        embeddings = []
+        names = support_names.copy()
+        names.extend(qry_names)
+        for name in names:
+            name = name.split('/')[-1]
+            embedding = self.embeddings_test[self.name2idx_test[name]]
+            embeddings.append(embedding)
+        embeddings = np.array(embeddings)
+
+        ssEmbeddings = embeddings[:shot_size*5,:].reshape(shot_size, 5, -1)
+        classEmbeddings = np.mean(ssEmbeddings, axis = 0).reshape(5, -1)
+
+        qEmbeddings = embeddings[shot_size*5:,:]
+        for i in range(len(qEmbeddings)):
+            qEmbedding = qEmbeddings[i]
             for classI in range(5):
-                avg_spt_emb = classpt_embs[classI]
-                diff = (avg_spt_emb - qry_emb) ** 2
+                avgSembedding = classEmbeddings[classI]
+                diff = (avgSembedding - qEmbedding) ** 2
                 relations.append(diff)    
-        relations = np.stack(relations).reshape(-1, 512)
+    
+        relations = np.stack(relations).reshape(-1, embeddings.shape[-1])
         preds = self.classifier.predict(relations)
-        preds = preds.reshape(len(qry_names), -1)
+        preds = preds.reshape(len(qEmbeddings), -1)
         return torch.from_numpy(preds)

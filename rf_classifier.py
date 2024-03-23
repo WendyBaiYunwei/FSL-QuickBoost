@@ -41,8 +41,8 @@ class RF():
 
         classpt_embs = []
         embeddings = []
-        names = support_names.copy()
-        names.extend(qry_names)
+        names = list(support_names)
+        names.extend(list(qry_names))
         for name in names:
             name = name.split('/')[-1]
             embedding = self.embeddings_test[self.name2idx_test[name]]

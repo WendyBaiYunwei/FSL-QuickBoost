@@ -51,11 +51,11 @@ def mean_confidence_interval(data, confidence=0.95):
 
 # logits shape: qry_size, way_size (5), 1
 def normalize(logits):
-    min_l = torch.min(logits, 1)
-    max_l = torch.max(logits, 1)
+    min_l = torch.min(logits, 1)[0].reshape(-1, 1, 1)
+    max_l = torch.max(logits, 1)[0].reshape(-1, 1, 1)
     normed = logits - min_l / (max_l - min_l)
     return normed
-    
+
 class CNNEncoder(nn.Module):
     """docstring for ClassName"""
     def __init__(self):
@@ -160,7 +160,7 @@ def main():
 
         num_per_class = 3
         test_dataloader = tg.get_mini_imagenet_data_loader(task,num_per_class=num_per_class,split="test",shuffle=True)
-        sample_images,sample_labels,support_names = sample_dataloader.__iter__().next()
+        sample_images,sample_labels,support_names = next(iter(sample_dataloader))
         for test_images,test_labels,qry_names in test_dataloader:
             batch_size = test_labels.shape[0]
             # calculate features
@@ -181,7 +181,7 @@ def main():
             sim_forest_rels = normalize(sim_forest_rels)
             relations = normalize(relations)
 
-            relations = 0.4 * sim_forest_rels + 0.5 * relations # uncomment to view results without quickboost
+            relations = 0.4 * sim_forest_rels + 0.5 * relations # comment out to view results without quickboost
 
             final_relations = relations.view(-1,CLASS_NUM).float().cuda()
 

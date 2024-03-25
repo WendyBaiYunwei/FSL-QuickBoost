@@ -53,7 +53,7 @@ def mean_confidence_interval(data, confidence=0.95):
 def normalize(logits):
     min_l = torch.min(logits, 1)[0].reshape(-1, 1, 1)
     max_l = torch.max(logits, 1)[0].reshape(-1, 1, 1)
-    normed = logits - min_l / (max_l - min_l)
+    normed = (logits - min_l) / (max_l - min_l)
     return normed
 
 class CNNEncoder(nn.Module):

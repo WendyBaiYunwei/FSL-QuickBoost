@@ -1,10 +1,9 @@
 ## FSL-QuickBoost
 
 ### Run code
-* Please first unzip the `data` folder in this repository.
-* Please download the mini-imagenet dataset at https://lyy.mpi-inf.mpg.de/mtl/download/ and store it to the same `data` folder
+* Download the mini-imagenet dataset at https://lyy.mpi-inf.mpg.de/mtl/download/ and store it to the same `data` folder
 * Edit `config.py` for the correct location of the `data` folder 
-* Please run `get_rf_data.py` to prepare the QuickBoost dataset. 
+* Run `get_rf_data.py` to prepare the QuickBoost dataset. 
 * You may run `test_rf.py` to train and test QuickBoost as a standalone classifier
 * Alternatively, you may directly test the ensemble. For 5-way-1-shot ensemble (mini-imagenet, relation network), please prepare a trained model via `miniimagenet_train_one_shot.py` to train, and use `test_ensemble.py` to test. 
 * Note that the implemented FSL-Rectifier has a higher accuracy than reported results in paper due to addition of normalization to FSL-Forest features (See `rf_classifier.py`).

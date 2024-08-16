@@ -1,0 +1,11 @@
+data/test*
+data/train*
+data/val*
+*.png
+*.jpeg
+*.jpg
+analysis/*.png
+analysis/results/*
+analysis/*.jpg
+analysis/__pycache__/*
+__pycache__/*
